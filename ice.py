@@ -1,3 +1,4 @@
+from operator import length_hint
 import random
 
 from numpy import NaN
@@ -84,7 +85,7 @@ class Generation_module:
 
         self.collected = 0
         self.collection_counter = Counter(12, 10) #handles output during collection
-        self.ice_reforming_counter = Counter(1, 200) #counts how long ice takes before starting to reform
+        self.ice_reforming_counter = Counter(1, 200 + 9 * length + 2.6666 * length * 0.5) #counts how long ice takes before starting to reform
 
         self.running_duration = Generation_module.get_cooldown_time(length)
 
@@ -236,7 +237,10 @@ class Farm:
 #print("")
 #g.print_state(detailed=True)
 
-f = Farm(64, 24)
+
+
+
+f = Farm(36, 40)
 f.tickwarp(72000, detailed_print=False)
 
 
