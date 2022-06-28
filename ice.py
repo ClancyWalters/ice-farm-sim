@@ -221,23 +221,23 @@ class Farm:
 #    c.print_status() #at 1
 #    print("")
 
-g = Generation_module(40) 
-g.collect()
-g.print_state(detailed=True)
-g.recieve()
-ice = 0
-for x in range(2160):
-    if x == 0:
-        g.collect()
-        ice += g.tick()
-    else:
-        g.tick()
+#g = Generation_module(40) 
+#g.collect()
+#g.print_state(detailed=True)
+#g.recieve()
+#ice = 0
+#for x in range(2160):
+#    if x == 0:
+#        g.collect()
+#        ice += g.tick()
+#    else:
+#        g.tick()
     #print(g.tick())
-print("")
-g.print_state(detailed=True)
+#print("")
+#g.print_state(detailed=True)
 
-#f = Farm(64, 24)
-#f.tickwarp(72000, detailed_print=True)
+f = Farm(64, 24)
+f.tickwarp(72000, detailed_print=False)
 
 
 
