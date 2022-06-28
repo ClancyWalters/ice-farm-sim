@@ -81,11 +81,14 @@ class Counter:
 
 class Generation_module:
     def __init__(self, length):
-        self.line = [1 for x in range(length)]
 
+        adjusted_length = length - int(length/5)
+        self.line = [1 for x in range(adjusted_length)]
+        
         self.collected = 0
         self.collection_counter = Counter(12, 10) #handles output during collection
-        self.ice_reforming_counter = Counter(1, 200 + 9 * length + 2.6666 * length * 0.5) #counts how long ice takes before starting to reform
+        #self.ice_reforming_counter = Counter(1, int(200 + 9 * length + 2.6666 * length * 0.5)) #counts how long ice takes before starting to reform
+        self.ice_reforming_counter = Counter(1, int(5 * 10 + 9 * length + 2.6666 * length * 0.5))
 
         self.running_duration = Generation_module.get_cooldown_time(length)
 
@@ -110,8 +113,8 @@ class Generation_module:
     def collect(self):
         if self.collection_counter.getActive():
             raise Exception("Attempted to collect while counter was still active")
-        if self.ice_reforming_counter.getActive():
-            raise Exception("Ice reforming cannot still be happening once collection counter has finished")
+        #if self.ice_reforming_counter.getActive():
+        #    raise Exception("Ice reforming cannot still be happening once collection counter has finished")
         if (self.collected != 0):
             raise Exception("Attempted to collect without finishing previous collection")
         
@@ -210,6 +213,8 @@ class Farm:
 
     def tickwarp(self, time, detailed_print=False):
         for i in range(time):
+            if (i % int(time/20) == 0):
+                print("Tick: " + str(i) + " Percentage: " + str(i/time*100) + "%")
             self.tick()
         self.print_results(detailed_print = detailed_print)
         
@@ -241,7 +246,7 @@ class Farm:
 
 
 f = Farm(36, 40)
-f.tickwarp(72000, detailed_print=False)
+f.tickwarp(720000, detailed_print=False)
 
 
 
