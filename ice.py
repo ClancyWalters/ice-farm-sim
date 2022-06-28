@@ -84,7 +84,7 @@ class Generation_module:
 
         self.collected = 0
         self.collection_counter = Counter(12, 10) #handles output during collection
-        self.ice_reforming_counter = Counter(1, 10 * 2 + 4 * length) #counts how long ice takes before starting to reform
+        self.ice_reforming_counter = Counter(1, 200) #counts how long ice takes before starting to reform
 
         self.running_duration = Generation_module.get_cooldown_time(length)
 
@@ -121,7 +121,7 @@ class Generation_module:
                     self.line[i] = 0
                     ice_count += 1
         self.collected = ice_count
-        #print(self.collected)
+        #print(self.collected) always 12 as expected
         self.collection_counter.setActive(True)
         self.ice_reforming_counter.setActive(True)
 
@@ -182,22 +182,16 @@ class Farm:
 
     def tick(self):
         #print("Tick " + str(self.tick_count))
-        #if module is outputting currently
-        if self.module_collection[self.active_module].isOutputting():
-            var = self.module_collection[self.active_module].recieve()
-            self.ice_count += var
-            #print(var)
-            #self.module_collection[self.active_module].print_state(detailed=True)
-        #if module finished outputting
-        else:
+
+        if not self.module_collection[self.active_module].isOutputting():
             if self.active_module == len(self.module_collection)-1:
                 self.active_module = 0
             else:
                 self.active_module += 1
             
             self.module_collection[self.active_module].collect()
-            self.ice_count += self.module_collection[self.active_module].recieve()
-
+        
+        self.ice_count += self.module_collection[self.active_module].tick()
         for m in self.module_collection:
             m.tick()
 
@@ -227,18 +221,23 @@ class Farm:
 #    c.print_status() #at 1
 #    print("")
 
-#g = Generation_module(12) 
-#g.collect()
-#g.print_state(detailed=True)
-#g.recieve()
-#for x in range(121):
-#    g.tick()
+g = Generation_module(40) 
+g.collect()
+g.print_state(detailed=True)
+g.recieve()
+ice = 0
+for x in range(2160):
+    if x == 0:
+        g.collect()
+        ice += g.tick()
+    else:
+        g.tick()
     #print(g.tick())
-#print("")
-#g.print_state(detailed=True)
+print("")
+g.print_state(detailed=True)
 
-f = Farm(64, 24)
-f.tickwarp(72000, detailed_print=True)
+#f = Farm(64, 24)
+#f.tickwarp(72000, detailed_print=True)
 
 
 
