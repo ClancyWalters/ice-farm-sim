@@ -1,7 +1,9 @@
-from operator import length_hint
 import random
+#import cProfile
+#import pstats
+#from pstats import SortKey
+from line_profiler import LineProfiler
 
-from numpy import NaN
 
 class Counter:
     def __init__(self, num, period, trigger_first=True):
@@ -82,13 +84,13 @@ class Counter:
 class Generation_module:
     def __init__(self, length):
 
-        adjusted_length = length - int(length/5)
-        self.line = [1 for x in range(adjusted_length)]
-        
+        self.adjusted_length = length - int(length/5)
+        self.line = [1 for x in range(self.adjusted_length)]
+        #self.line = np.array([1 for x in range(self.adjusted_length)])
         self.collected = 0
         self.collection_counter = Counter(12, 10) #handles output during collection
         #self.ice_reforming_counter = Counter(1, int(200 + 9 * length + 2.6666 * length * 0.5)) #counts how long ice takes before starting to reform
-        self.ice_reforming_counter = Counter(1, int(5 * 10 + 9 * length + 2.6666 * length * 0.5))
+        self.ice_reforming_counter = Counter(1, int(5 * 10 + 9 * length - 2.6666 * length * 0.5))
 
         self.running_duration = Generation_module.get_cooldown_time(length)
 
@@ -128,10 +130,22 @@ class Generation_module:
         #print(self.collected) always 12 as expected
         self.collection_counter.setActive(True)
         self.ice_reforming_counter.setActive(True)
-
+    
+    #@profile
     def attempt_ice(self, i):
-        if random.randrange(0, 4096) == 0:
+        if random.getrandbits(16) < 14:
+        #if random.random() < 0.0002:
+        #if fastrand.pcg32() < 524288:
+        #if random.random()*4096 == 0:
+        #if random.random() < np.float16(0.0002):
+        #if random.randrange(0, 4096) == 0: #this is instanely slow
             self.line[i] = 1
+    
+    #@profile
+    def attempt_ice_wrapper(self): #26.5s
+        for pos, item in enumerate(self.line): #40 long
+            if item == 0:
+                self.attempt_ice(pos) #15s
 
     def recieve(self):
         if (self.collected > 0):
@@ -139,24 +153,47 @@ class Generation_module:
             return 1
         return 0
 
-    def tick(self):
-
-        #handle reforming counter
+    def temp1(self):
         if self.ice_reforming_counter.getActive():
             self.ice_reforming_counter.tick()
-        
-        #reform ice if reforming counter is inactive
+    
+    #@profile
+    def temp2(self):
         if not self.ice_reforming_counter.getActive():
-            for i in range(len(self.line)):
-                if self.line[i] == 0:
-                    self.attempt_ice(i)
+            #for i in range(self.adjusted_length):
+            #    if self.line[i] == 0:
+            #        self.attempt_ice(i)
+            self.attempt_ice_wrapper()
+            #for pos, item in enumerate(self.line):
+            #    if item == 0:
+            #        self.attempt_ice(pos)
 
-        #handle collection counter
+
+    def temp3(self):
         if self.collection_counter.getActive():
             if self.collection_counter.tick() == "activate":
                 return self.recieve()
-        
         return 0
+    #@profile
+    def tick(self):
+
+        #handle reforming counter
+        #if self.ice_reforming_counter.getActive():
+        #    self.ice_reforming_counter.tick()
+        self.temp1()
+        #reform ice if reforming counter is inactive
+        #if not self.ice_reforming_counter.getActive():
+        #    for i in range(len(self.line)):
+        #        if self.line[i] == 0:
+        #            self.attempt_ice(i)
+        self.temp2()
+        #handle collection counter
+        #if self.collection_counter.getActive():
+        #    if self.collection_counter.tick() == "activate":
+        #        return self.recieve()
+        #return 0
+        return self.temp3()
+        
 
 class Farm:
     def __init__(self, module_count, module_length):
@@ -164,6 +201,10 @@ class Farm:
         if (module_count < minimum_module_count):
             raise Exception("Too few modules, minimum is: " + str(minimum_module_count))
         
+        self.module_count = module_count
+        self.module_length = module_length
+
+        self.adjusted_module_length = module_length - int(module_length/5)
         self.module_collection = [Generation_module(module_length) for x in range(module_count)]
 
         self.active_module = 0
@@ -184,6 +225,8 @@ class Farm:
         
         raise Exception("Couldn't find outputting module")
 
+
+
     def tick(self):
         #print("Tick " + str(self.tick_count))
 
@@ -192,9 +235,9 @@ class Farm:
                 self.active_module = 0
             else:
                 self.active_module += 1
-            
             self.module_collection[self.active_module].collect()
         
+        #this is an unresolved bug
         self.ice_count += self.module_collection[self.active_module].tick()
         for m in self.module_collection:
             m.tick()
@@ -244,12 +287,12 @@ class Farm:
 
 
 
-
 f = Farm(36, 40)
-f.tickwarp(720000, detailed_print=False)
+f.tickwarp(72000, detailed_print=False)
 
-
-
+#cProfile.run("f.tickwarp(72000, detailed_print=False)", 'restats')
+#p = pstats.Stats('restats')
+#p.sort_stats(SortKey.CUMULATIVE).print_stats()
 
 
 
